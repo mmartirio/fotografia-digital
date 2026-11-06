@@ -217,14 +217,13 @@ class FluxoGaleriaTest extends TesteIntegracao {
                 .content("{\"email\":\"ninguem@teste.com\"}")).andExpect(status().isAccepted()).andReturn();
         assertThat(json.readTree(r.getResponse().getContentAsString()).has("linkDev")).isFalse();
 
-        // senha errada e bloqueio após 5 tentativas
-        String login = "{\"email\":\"bloqueio@teste.com\",\"senha\":\"errada\"}";
-        for (int i = 0; i < 5; i++) {
+        // e-mail inexistente: sempre 401, sem bloqueio e sem guardar nada em memória
+        // (o bloqueio de conta real após 5 falhas é testado em DoisFatoresTest)
+        String login = "{\"email\":\"ninguem-" + UUID.randomUUID() + "@teste.com\",\"senha\":\"errada\"}";
+        for (int i = 0; i < 7; i++) {
             mvc.perform(post("/api/publico/acesso/painel/entrar").contentType(MediaType.APPLICATION_JSON).content(login))
                     .andExpect(status().isUnauthorized());
         }
-        mvc.perform(post("/api/publico/acesso/painel/entrar").contentType(MediaType.APPLICATION_JSON).content(login))
-                .andExpect(status().isTooManyRequests());
 
         // sair invalida a sessão
         Cookie painel = loginPainel();

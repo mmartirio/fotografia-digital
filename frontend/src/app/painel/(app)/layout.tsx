@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MenuPainel } from "@/components/painel/MenuPainel";
 import { obterConteudo } from "@/conteudo/obter";
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-type Eu = { nome: string; email: string };
+type Eu = { nome: string; email: string; doisFatores: boolean };
 
 export default async function LayoutPainel({ children }: { children: React.ReactNode }) {
   const { status, dados } = await apiServidor<Eu>("/api/painel/eu");
@@ -19,7 +20,21 @@ export default async function LayoutPainel({ children }: { children: React.React
   return (
     <div className="min-h-dvh bg-superficie lg:flex">
       <MenuPainel nome={dados.nome} aparencia={aparencia} />
-      <main className="min-w-0 flex-1 px-4 pb-24 pt-20 sm:px-6 lg:px-10 lg:pb-12 lg:pt-10">{children}</main>
+      <main className="min-w-0 flex-1 px-4 pb-24 pt-20 sm:px-6 lg:px-10 lg:pb-12 lg:pt-10">
+        {/* Lembrete até a verificação em duas etapas ser ativada */}
+        {!dados.doisFatores && (
+          <div className="mx-auto mb-6 flex max-w-6xl flex-col gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+            <p>
+              <strong>Proteja o painel:</strong> ative a verificação em duas etapas. Assim, mesmo com a senha, ninguém entra sem o
+              código do seu celular.
+            </p>
+            <Link href="/painel/conta#dois-fatores" className="botao-primario min-h-10 shrink-0 px-5">
+              Ativar agora
+            </Link>
+          </div>
+        )}
+        {children}
+      </main>
     </div>
   );
 }

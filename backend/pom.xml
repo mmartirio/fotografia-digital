@@ -71,6 +71,13 @@
             <version>0.4.20</version>
         </dependency>
 
+        <!-- QR Code para configurar a verificação em duas etapas (TOTP) -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.4</version>
+        </dependency>
+
         <!-- Testes -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

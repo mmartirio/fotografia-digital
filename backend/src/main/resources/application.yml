@@ -60,6 +60,10 @@ app:
     email: ${ADMIN_EMAIL:admin@localhost}
     senha: ${ADMIN_SENHA:}
     nome: ${ADMIN_NOME:Davi}
+  seguranca:
+    # Chave AES-256 (Base64, 32 bytes) que cifra os segredos do 2FA no banco.
+    # Vazia = gerada e guardada no volume de dados ({armazenamento}/.seguranca/chave).
+    chave-cripto: ${APP_CHAVE_CRIPTO:}
   acesso:
     # Só no perfil demo: devolve o link mágico na resposta (sem precisar de e-mail)
     expor-link-dev: false

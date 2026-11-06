@@ -34,6 +34,20 @@ public class Usuario {
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant criadoEm;
 
+    // ---- verificação em duas etapas (segredos cifrados pelo Cifrador) ----
+
+    @Column(name = "totp_segredo")
+    private String totpSegredo;
+
+    @Column(name = "totp_pendente")
+    private String totpPendente;
+
+    @Column(name = "totp_ativo", nullable = false)
+    private boolean totpAtivo;
+
+    @Column(name = "totp_ultimo_passo")
+    private Long totpUltimoPasso;
+
     protected Usuario() {
         // JPA
     }
@@ -51,6 +65,36 @@ public class Usuario {
     public void trocarSenha(String novoHash) {
         this.senhaHash = novoHash;
     }
+
+    /** Guarda um segredo novo ainda não confirmado (não vale para o login até ativar). */
+    public void iniciarDoisFatores(String segredoCifrado) {
+        this.totpPendente = segredoCifrado;
+    }
+
+    /** Confirma o segredo pendente após o primeiro código correto. */
+    public void ativarDoisFatores(long passoUsado) {
+        this.totpSegredo = this.totpPendente;
+        this.totpPendente = null;
+        this.totpAtivo = true;
+        this.totpUltimoPasso = passoUsado;
+    }
+
+    public void desativarDoisFatores() {
+        this.totpSegredo = null;
+        this.totpPendente = null;
+        this.totpAtivo = false;
+        this.totpUltimoPasso = null;
+    }
+
+    /** Anti-replay: um código só pode ser usado uma vez. */
+    public void registrarPassoUsado(long passo) {
+        this.totpUltimoPasso = passo;
+    }
+
+    public boolean isTotpAtivo() { return totpAtivo; }
+    public String getTotpSegredo() { return totpSegredo; }
+    public String getTotpPendente() { return totpPendente; }
+    public Long getTotpUltimoPasso() { return totpUltimoPasso; }
 
     public UUID getId() { return id; }
     public String getNome() { return nome; }

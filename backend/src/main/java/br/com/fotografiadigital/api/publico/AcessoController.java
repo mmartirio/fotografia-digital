@@ -22,6 +22,7 @@ import br.com.fotografiadigital.aplicacao.acesso.AcessoAdminService;
 import br.com.fotografiadigital.aplicacao.acesso.AcessoClienteService;
 import br.com.fotografiadigital.aplicacao.acesso.SessaoService;
 import br.com.fotografiadigital.dominio.acesso.TipoSessao;
+import br.com.fotografiadigital.infra.email.EmailService;
 import br.com.fotografiadigital.infra.seguranca.SessaoFiltro;
 
 /** Entrada e saída: link mágico do cliente e login do painel. */
@@ -35,11 +36,12 @@ public class AcessoController {
     private final boolean exporLinkDev;
 
     public AcessoController(AcessoClienteService acessoCliente, AcessoAdminService acessoAdmin, SessaoService sessoes,
-            @Value("${app.acesso.expor-link-dev:false}") boolean exporLinkDev) {
+            EmailService email, @Value("${app.acesso.expor-link-dev:false}") boolean exporLinkDev) {
         this.acessoCliente = acessoCliente;
         this.acessoAdmin = acessoAdmin;
         this.sessoes = sessoes;
-        this.exporLinkDev = exporLinkDev;
+        // Segurança: com SMTP configurado (produção), o link NUNCA volta na resposta
+        this.exporLinkDev = exporLinkDev && !email.smtpConfigurado();
     }
 
     public record SolicitarLink(@NotBlank @Email @Size(max = 180) String email) {
@@ -77,16 +79,34 @@ public class AcessoController {
         return sair(http, TipoSessao.CLIENTE);
     }
 
+    public record SegundoFator(@NotBlank @Size(max = 200) String desafio, @NotBlank @Size(max = 20) String codigo) {
+    }
+
+    /** 1ª etapa. Com 2FA ativo, responde {status:"2fa", desafio} sem criar sessão. */
     @PostMapping("/painel/entrar")
     public ResponseEntity<Map<String, String>> entrarPainel(@Valid @RequestBody Login req, HttpServletRequest http) {
-        return switch (acessoAdmin.entrar(req.email(), req.senha())) {
+        return resposta(acessoAdmin.entrar(req.email(), req.senha()), http, "E-mail ou senha incorretos.");
+    }
+
+    /** 2ª etapa: código do app autenticador ou de recuperação. */
+    @PostMapping("/painel/2fa")
+    public ResponseEntity<Map<String, String>> segundoFator(@Valid @RequestBody SegundoFator req, HttpServletRequest http) {
+        return resposta(acessoAdmin.confirmarSegundoFator(req.desafio(), req.codigo()), http, "Código incorreto.");
+    }
+
+    private ResponseEntity<Map<String, String>> resposta(AcessoAdminService.Resultado r, HttpServletRequest http, String msgInvalido) {
+        return switch (r) {
             case AcessoAdminService.Resultado.Ok ok -> ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, sessoes.cookie(ok.sessao(), http.isSecure()).toString())
                     .body(Map.of("status", "ok"));
+            case AcessoAdminService.Resultado.SegundoFator s -> ResponseEntity.ok()
+                    .body(Map.of("status", "2fa", "desafio", s.desafio()));
             case AcessoAdminService.Resultado.Invalido i -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("erro", "E-mail ou senha incorretos."));
+                    .body(Map.of("erro", msgInvalido));
             case AcessoAdminService.Resultado.Bloqueado b -> ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                     .body(Map.of("erro", "Muitas tentativas. Aguarde 15 minutos e tente novamente."));
+            case AcessoAdminService.Resultado.Expirado e -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("erro", "Sua tentativa de login expirou. Entre novamente com e-mail e senha.", "reiniciar", "true"));
         };
     }
 

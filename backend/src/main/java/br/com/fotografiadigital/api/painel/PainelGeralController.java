@@ -53,7 +53,7 @@ public class PainelGeralController {
         this.relogio = relogio;
     }
 
-    public record Eu(UUID id, String nome, String email) {
+    public record Eu(UUID id, String nome, String email, boolean doisFatores) {
     }
 
     public record TrocaSenha(@NotBlank String senhaAtual, @NotBlank @Size(min = 8, max = 200) String novaSenha) {
@@ -73,7 +73,7 @@ public class PainelGeralController {
     @GetMapping("/eu")
     public Eu eu(@AuthenticationPrincipal Identidade id) {
         var u = usuarios.findById(id.exigirAdmin()).orElseThrow();
-        return new Eu(u.getId(), u.getNome(), u.getEmail());
+        return new Eu(u.getId(), u.getNome(), u.getEmail(), u.isTotpAtivo());
     }
 
     @PostMapping("/senha")
