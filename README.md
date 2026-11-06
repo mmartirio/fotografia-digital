@@ -65,9 +65,23 @@ BACKEND_URL=http://localhost:8080 npm run dev
 ## Testes
 
 ```bash
-cd backend && ./mvnw test      # sobe Postgres via Testcontainers (requer Docker)
-cd frontend && npm run lint && npm run build
+cd backend && ./mvnw test                          # JUnit + Postgres real via Testcontainers (requer Docker)
+cd frontend && npm run lint && npx tsc --noEmit && npm run build
+./scripts/teste-fumaca.sh http://localhost:3000    # stack em execução (defina ADMIN_EMAIL/ADMIN_SENHA para testar o login)
 ```
+
+## CI/CD (GitHub Actions)
+
+O workflow [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) roda a cada push e pull request:
+
+| Job | O que faz |
+|-----|-----------|
+| **Backend** | `./mvnw test` (testes de integração com Postgres real) |
+| **Frontend** | lint, checagem de tipos e build de produção |
+| **Integração** | sobe frontend + backend + banco com as imagens de produção e roda o teste de fumaça |
+| **CD** | só na `main`, após os testes: publica as imagens no GitHub Container Registry (`ghcr.io/mmartirio/fotografia-digital/backend` e `/frontend`, tags `latest` e o SHA do commit) |
+
+O deploy no servidor ainda não está automatizado (hospedagem a definir): basta usar as imagens publicadas.
 
 ## Estrutura
 
