@@ -4,10 +4,10 @@
 
 | Tema | Decisão |
 |------|---------|
-| Hospedagem | **Vercel** (plano Pro: uso comercial) |
+| Hospedagem | **Netlify** (plano gratuito permite uso comercial) |
 | App | Um único Next.js 15 (App Router) + TypeScript + Tailwind CSS 4: site, painel e API (`src/app/api`) |
-| Banco | Postgres no **Neon** (integração do Vercel); PGlite no desenvolvimento e nos testes |
-| Imagens | **Vercel Blob**; reduzidas no navegador antes do envio (limite de 4,5 MB por requisição) |
+| Banco | Postgres no **Neon** (região São Paulo); PGlite no desenvolvimento e nos testes |
+| Imagens | **Netlify Blobs**, servidas em `/imagens/...`; reduzidas no navegador antes do envio (limite de ~6 MB por requisição) |
 | Contato | Só WhatsApp e Instagram (sem formulário); atendimento em todo o estado de Sergipe |
 | Área do cliente | **Removida** a pedido do fotógrafo: seleção e entrega das fotos combinadas pelo WhatsApp |
 | Metodologia | **Mobile first** |
@@ -15,7 +15,7 @@
 ## Histórico
 
 - O projeto começou com 3 containers Docker (Next.js, Spring Boot e Postgres) e uma área do cliente para seleção e download, com retenção de 60 dias.
-- Em 2026-11 a área do cliente foi removida. Para caber no Vercel, o backend Java foi reescrito dentro do Next.js e o Docker saiu do projeto.
+- Em 2026-11 a área do cliente foi removida. Para hospedar sem servidor próprio, o backend Java foi reescrito dentro do Next.js e o Docker saiu do projeto. O alvo inicial era o Vercel; como o plano gratuito dele não permite uso comercial, a hospedagem passou para o Netlify.
 - Mantidos da versão anterior: login do painel com 2FA (TOTP), bloqueio por tentativas, cabeçalhos de segurança, proteção contra download das fotos, integrações com Google (Search Console, Analytics com consentimento, PageSpeed/Lighthouse).
 
 ## Metodologia: Mobile First
