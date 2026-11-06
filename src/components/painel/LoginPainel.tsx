@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { api } from "@/lib/api";
 import { campo } from "./estilos";
+import { CampoSenha } from "./CampoSenha";
 
 type RespostaLogin = { status: "ok" } | { status: "2fa"; desafio: string };
 
@@ -141,7 +142,7 @@ export function LoginPainel() {
       </label>
       <label className="flex flex-col gap-2 text-sm font-medium">
         Senha
-        <input name="senha" type="password" required autoComplete="current-password" className={campo} />
+        <CampoSenha name="senha" required autoComplete="current-password" />
       </label>
       {erro && (
         <p role="alert" className="text-sm text-red-600">

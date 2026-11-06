@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { api } from "@/lib/api";
 import { campo } from "./estilos";
+import { CampoSenha } from "./CampoSenha";
 
 type Status = { ativo: boolean; codigosRestantes: number };
 type Configuracao = { segredo: string; uri: string; qrCode: string };
@@ -134,7 +135,7 @@ export function DoisFatores({ status }: { status: Status }) {
             }}
           >
             <p className="text-sm text-texto-suave">Sem a verificação em duas etapas, só a senha protege o painel.</p>
-            <input name="senha" type="password" required autoComplete="current-password" placeholder="Senha atual" className={campo} />
+            <CampoSenha name="senha" required autoComplete="current-password" placeholder="Senha atual" />
             <input name="codigo" required autoComplete="one-time-code" placeholder="Código do app ou de recuperação" className={campo} />
             {erroEl}
             <div className="flex gap-2">
@@ -230,7 +231,7 @@ export function DoisFatores({ status }: { status: Status }) {
         }}
       >
         <p className="text-sm text-texto-suave">Para começar, confirme sua senha.</p>
-        <input name="senha" type="password" required autoComplete="current-password" placeholder="Senha atual" autoFocus className={campo} />
+        <CampoSenha name="senha" required autoComplete="current-password" placeholder="Senha atual" autoFocus />
         {erroEl}
         <div className="flex gap-2">
           <button className="botao-primario" disabled={ocupado}>

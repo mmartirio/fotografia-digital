@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { api } from "@/lib/api";
-import { campo } from "./estilos";
+import { CampoSenha } from "./CampoSenha";
 
 export function TrocarSenha() {
   const [msg, setMsg] = useState<{ ok: boolean; texto: string } | null>(null);
@@ -26,9 +26,9 @@ export function TrocarSenha() {
 
   return (
     <form onSubmit={trocar} className="mt-4 flex flex-col gap-3">
-      <input name="senhaAtual" type="password" required placeholder="Senha atual" autoComplete="current-password" className={campo} />
-      <input name="novaSenha" type="password" required minLength={8} placeholder="Nova senha (mín. 8 caracteres)" autoComplete="new-password" className={campo} />
-      <input name="confirmacao" type="password" required minLength={8} placeholder="Confirme a nova senha" autoComplete="new-password" className={campo} />
+      <CampoSenha name="senhaAtual" required placeholder="Senha atual" autoComplete="current-password" />
+      <CampoSenha name="novaSenha" required minLength={8} placeholder="Nova senha (mín. 8 caracteres)" autoComplete="new-password" />
+      <CampoSenha name="confirmacao" required minLength={8} placeholder="Confirme a nova senha" autoComplete="new-password" />
       {msg && <p className={`text-sm ${msg.ok ? "text-emerald-700" : "text-red-600"}`}>{msg.texto}</p>}
       <button type="submit" className="botao-primario self-start">
         Salvar nova senha
