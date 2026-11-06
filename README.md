@@ -1,108 +1,84 @@
-# Fotografia Digital
+# DAVIFOTOVIDEO — site do fotógrafo
 
-Site para fotógrafo com landing page (SEO, CTAs, animações na rolagem), área do cliente
-(seleção de fotos e download das finais, com expiração em 60 dias) e painel gestor.
-
-Plano completo e decisões: [PLANO.md](PLANO.md). Metodologia **mobile first**.
+Site com landing page (portfólio, serviços, depoimentos, FAQ e contato por WhatsApp/Instagram) e **painel gestor** para o fotógrafo editar textos, imagens, cores, fontes, logo e portfólio. Tudo é um único app **Next.js** pronto para o **Vercel**.
 
 ## Stack
 
-| Container  | Tecnologia                                           | Porta              |
-|------------|------------------------------------------------------|--------------------|
-| `frontend` | Next.js 15 · TypeScript · Tailwind 4 · Framer Motion | 3000 (pública)     |
-| `backend`  | Spring Boot 4.1 · Java 21 · Flyway                   | 8080 (só interna)  |
-| `db`       | PostgreSQL 16                                        | 5434 (só localhost)|
+| Parte | Tecnologia |
+| --- | --- |
+| App (site + painel + API) | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4 |
+| Banco | Postgres: **Neon** em produção · **PGlite** (Postgres em WebAssembly) no desenvolvimento |
+| Imagens enviadas | **Vercel Blob** em produção · `public/uploads` no desenvolvimento |
+| Testes | Vitest (unitários e integração com banco em memória) + teste de fumaça + Lighthouse CI |
 
-As fotos ficam em `/data/fotos` no container `backend` (volume `fotos_data`).
-O navegador só fala com o frontend; `/api/*` é repassado ao backend pelo Next.
+Metodologia **mobile first**: estilos partem da tela pequena e crescem com `sm:`/`md:`/`lg:`.
 
-## Iniciando o projeto
+## Desenvolvimento local
 
-Requisito: Docker Desktop (Windows/macOS) ou Docker Engine + Compose (Linux).
-
-| Ação | Windows | Linux / macOS / servidor |
-|------|---------|--------------------------|
-| Subir (com build) | `iniciar.cmd` (ou duplo clique) · `.\iniciar.ps1` | `./iniciar.sh` |
-| **Desenvolvimento (hot reload)** | `.\iniciar.ps1 -Dev` | `./iniciar.sh --dev` |
-| Subir sem build | `.\iniciar.ps1 -SemBuild` | `./iniciar.sh --sem-build` |
-| Subir e ver logs | `.\iniciar.ps1 -Logs` | `./iniciar.sh --logs` |
-| Parar (mantém dados) | `.\iniciar.ps1 -Parar` | `./iniciar.sh --parar` |
-| Apagar banco e fotos | `.\iniciar.ps1 -Resetar` | `./iniciar.sh --resetar` |
-
-No modo **dev** o container `frontend` roda `next dev` com a pasta `frontend/` montada: salvou o arquivo, o navegador atualiza. Para voltar ao modo produção, rode o script sem `-Dev`.
-
-O script:
-1. verifica se o Docker está rodando;
-2. cria o `.env` a partir do `.env.example`, com senha aleatória para o banco, se ele não existir;
-3. verifica se as portas do banco e do site estão livres;
-4. sobe os containers e aguarda todos ficarem saudáveis.
-
-> Se o `.env` for apagado depois que o banco já foi criado, o script para com erro em vez de
-> gerar uma senha nova, que não funcionaria com o banco existente.
-> Restaure o `.env` ou use a opção de resetar.
-
-Manualmente: `cp .env.example .env` (ajuste `DB_PASSWORD`) e `docker compose up -d --build`.
-
-- Site: http://localhost:3000
-- Health: http://localhost:3000/saude (frontend) · `docker compose ps` mostra o health de todos
-
-## Desenvolvimento local (sem Docker para front/back)
+Não precisa de Docker nem de Postgres instalado.
 
 ```bash
-# banco
-docker compose up -d db
-
-# backend (usa localhost:5434)
-cd backend
-DB_URL=jdbc:postgresql://localhost:5434/fotografia DB_PASSWORD=<senha> ./mvnw spring-boot:run
-
-# frontend
-cd frontend
 npm install
-BACKEND_URL=http://localhost:8080 npm run dev
+cp .env.example .env   # ajuste ADMIN_EMAIL / ADMIN_SENHA
+npm run dev            # http://localhost:3000  ·  painel em /painel
 ```
 
-## Testes
+Sem `DATABASE_URL`, o banco fica em `.dados/pglite` (criado sozinho, com o usuário do painel vindo de `ADMIN_EMAIL`/`ADMIN_SENHA`). Para recomeçar do zero, apague a pasta `.dados/`.
 
-```bash
-cd backend && ./mvnw test                          # JUnit + Postgres real via Testcontainers (requer Docker)
-cd frontend && npm run lint && npx tsc --noEmit && npm run build
-./scripts/teste-fumaca.sh http://localhost:3000    # stack em execução (defina ADMIN_EMAIL/ADMIN_SENHA para testar o login)
-```
+| Comando | O que faz |
+| --- | --- |
+| `npm run dev` | servidor de desenvolvimento (hot reload) |
+| `npm test` | testes (Vitest) |
+| `npm run lint` / `npm run tipos` | ESLint / TypeScript |
+| `npm run build` && `npm start` | build e servidor de produção local |
+| `npm run verificar` | lint + tipos + testes + build |
+| `bash scripts/teste-fumaca.sh [URL]` | teste de fumaça de um site no ar (com `ADMIN_EMAIL`/`ADMIN_SENHA`, testa o painel logado) |
 
-## CI/CD (GitHub Actions)
+## Publicação no Vercel
 
-O workflow [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) roda a cada push e pull request:
+1. **Importe o repositório** em [vercel.com/new](https://vercel.com/new) (framework detectado: Next.js; nada a configurar no build).
+2. **Banco:** *Storage → Create → Neon (Postgres)* e conecte ao projeto. A variável `DATABASE_URL` é criada sozinha.
+3. **Imagens:** *Storage → Create → Blob* e conecte ao projeto. A variável `BLOB_READ_WRITE_TOKEN` é criada sozinha.
+4. **Variáveis** em *Settings → Environment Variables* (Production e Preview):
+   - `APP_CHAVE_CRIPTO`: gere com `openssl rand -base64 32` e **guarde uma cópia**; obrigatória;
+   - `ADMIN_EMAIL`, `ADMIN_SENHA`, `ADMIN_NOME`: usuário do painel, criado no primeiro acesso ao banco vazio. Depois troque a senha pelo painel;
+   - `SITE_URL`: o domínio definitivo (ex.: `https://davifotovideo.com.br`). Se ficar vazia, o Vercel usa o domínio do projeto.
+5. **Deploy:** cada push na `main` publica em produção; cada PR ganha uma URL de preview.
+6. **Domínio:** *Settings → Domains*.
+7. **Google:** no painel, em *Editar site → SEO*, cole o código do Search Console e o ID do Google Analytics (GA4). A tela inicial do painel tem o atalho para o PageSpeed.
 
-| Job | O que faz |
-|-----|-----------|
-| **Backend** | `./mvnw test` (testes de integração com Postgres real) |
-| **Frontend** | lint, checagem de tipos e build de produção |
-| **Integração** | sobe frontend + backend + banco com as imagens de produção e roda o teste de fumaça |
-| **CD** | só na `main`, após os testes: publica as imagens no GitHub Container Registry (`ghcr.io/mmartirio/fotografia-digital/backend` e `/frontend`, tags `latest` e o SHA do commit) |
+> **Plano:** o Vercel Hobby (grátis) é só para uso **não comercial**. Como o site é de um negócio, use o **Pro** (US$ 20/mês). Neon e Blob têm cotas gratuitas que atendem um site deste porte.
 
-O deploy no servidor ainda não está automatizado (hospedagem a definir): basta usar as imagens publicadas.
+### Limites a conhecer
+
+- Requisições no Vercel vão até **4,5 MB**. Por isso o painel reduz as fotos no navegador antes do envio (até 2400 px, com miniatura de 800 px; logo até 512 px).
+- O conteúdo do site fica em cache por até 5 minutos, mas cada gravação no painel atualiza o site na hora.
 
 ## Estrutura
 
 ```
-backend/
-  src/main/java/br/com/fotografiadigital/
-    infra/armazenamento   pastas de fotos no disco
-    infra/seguranca       Spring Security (stateless)
-  src/main/resources/db/migration   migrações Flyway
-frontend/
-  src/app/                rotas (App Router)
-  src/app/api/[...caminho]  proxy para o backend
-  src/lib/                utilitários
+src/app/                 páginas (landing, painel) e rotas da API (src/app/api/...)
+src/servidor/            código só do servidor: banco, login/2FA, conteúdo, imagens, helpers HTTP
+src/conteudo/            conteúdo padrão do site, tipos e leitura (padrão + o que foi salvo no painel)
+src/components/          seções da landing e componentes do painel
+src/lib/                 utilitários (cliente da API, redimensionamento de imagem, Google, fontes)
+testes/                  testes do Vitest
+scripts/teste-fumaca.sh  teste de fumaça usado no CI
 ```
+
+## CI (GitHub Actions)
+
+Em cada push e PR (`.github/workflows/ci-cd.yml`): auditoria de dependências, lint, tipos, testes, build, teste de fumaça com `next start` e **Lighthouse mobile** (relatório salvo como artefato). O deploy fica com a integração Git do Vercel.
+
+Última medição local do Lighthouse (mobile): desempenho 97–100, acessibilidade 97, boas práticas 96, SEO 100.
 
 ## Segurança
 
-- **Painel:** senha + **verificação em duas etapas** (TOTP: Google Authenticator, Microsoft Authenticator, Authy), ativada em *Conta*. Inclui 10 códigos de recuperação de uso único. Segredos cifrados no banco (AES-256-GCM) com a chave `APP_CHAVE_CRIPTO` (ou arquivo gerado no volume de fotos: faça backup dele junto com o banco).
-- **Bloqueio:** 5 falhas (senha ou código) em 15 min bloqueiam a conta temporariamente.
-- **Sessões:** cookies `httpOnly` + `SameSite=Lax`; com `SITE_URL` em `https://`, sempre `Secure`.
-- **Área do cliente:** link de acesso de uso único (30 min); o cliente só acessa as próprias galerias; prévias com marca d'água.
-- **Cabeçalhos:** CSP `frame-ancestors 'none'`, `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS.
-- **Produção:** configure `SMTP_HOST` (sem SMTP os links de acesso vão para o log) e **não** use `docker-compose.dev.yml` (perfil `demo`).
-- **Varredura:** `docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image <imagem>` e `npm audit --omit=dev`.
+- **Painel:** senha (bcrypt) + **verificação em duas etapas** (TOTP: Google Authenticator, Microsoft Authenticator, Authy), ativada em *Conta*, com 10 códigos de recuperação de uso único. Os segredos ficam cifrados no banco (AES-256-GCM, chave `APP_CHAVE_CRIPTO`). Cada código vale uma única vez (anti-replay).
+- **Bloqueio:** 5 falhas (senha ou código) em 15 min bloqueiam a conta temporariamente. O desafio do 2FA vale 5 min e aceita até 5 códigos.
+- **Sessões:** token opaco em cookie `httpOnly` + `SameSite=Lax` (`Secure` em produção), guardado no banco só como hash e com validade de 7 dias.
+- **CSRF:** as rotas que alteram dados exigem a mesma origem do site.
+- **Uploads:** só JPEG, PNG ou WebP, conferidos pela assinatura dos bytes (não pela extensão), com até 4 MB e 40 MP.
+- **Cabeçalhos:** CSP `frame-ancestors 'none'`, `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy` e HSTS.
+- **Proteção das fotos:** clique direito, arrastar, Ctrl+S/Ctrl+P e impressão bloqueados no site. Isso dificulta a cópia, mas não a impede (ex.: captura de tela).
+- **Dependências:** `npm audit --omit=dev` roda no CI.
