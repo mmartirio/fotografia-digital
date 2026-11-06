@@ -160,7 +160,12 @@ export function CampoNomeLogo({
   );
 }
 
-/** Escolha entre as 10 fontes, com prévia de cada uma. */
+const GRUPOS_FONTE = [
+  { nome: "Com serifa", fontes: FONTES.filter((f) => !f.estilo.startsWith("Sem serifa")) },
+  { nome: "Sem serifa", fontes: FONTES.filter((f) => f.estilo.startsWith("Sem serifa")) },
+];
+
+/** Escolha entre as 10 fontes numa lista de seleção, com prévia da escolhida. */
 export function SeletorFonte({
   rotulo,
   valor,
@@ -172,37 +177,34 @@ export function SeletorFonte({
   titulos: boolean;
   aoMudar: (v: string) => void;
 }) {
+  const atual = FONTES.find((f) => f.slug === valor);
   return (
-    <fieldset>
-      <legend className="mb-2 text-sm font-medium">{rotulo}</legend>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3" role="radiogroup" aria-label={rotulo}>
-        {FONTES.map((f) => {
-          const ativo = valor === f.slug;
-          return (
-            <button
-              key={f.slug}
-              type="button"
-              role="radio"
-              aria-checked={ativo}
-              onClick={() => aoMudar(f.slug)}
-              className={`rounded-sm border p-3 text-left transition-colors ${
-                ativo ? "border-destaque bg-agua/25 ring-2 ring-destaque" : "border-borda bg-white hover:border-destaque"
-              }`}
-            >
-              <span
-                className="block truncate"
-                style={{ fontFamily: varFonte(f.slug), fontSize: titulos ? "1.6rem" : "1rem", lineHeight: 1.25 }}
-              >
-                {titulos ? "Registrando momentos" : "Fotografia autoral para eternizar os momentos que importam."}
-              </span>
-              <span className="mt-1 block text-xs text-texto-suave">
-                {ativo ? "✓ " : ""}
-                {f.nome} · {f.estilo}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </fieldset>
+    <div className="flex flex-col gap-2">
+      <label className="flex flex-col gap-1 text-sm font-medium">
+        {rotulo}
+        <select value={atual?.slug ?? ""} onChange={(e) => aoMudar(e.target.value)} className={campo}>
+          {!atual && <option value="">Escolha uma fonte</option>}
+          {GRUPOS_FONTE.map((g) => (
+            <optgroup key={g.nome} label={g.nome}>
+              {g.fontes.map((f) => (
+                // no computador, cada opção já aparece na própria fonte
+                <option key={f.slug} value={f.slug} style={{ fontFamily: varFonte(f.slug) }}>
+                  {f.nome} · {f.estilo}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </label>
+      {atual && (
+        <p
+          className="rounded-sm border border-borda bg-white px-3 py-2"
+          style={{ fontFamily: varFonte(atual.slug), fontSize: titulos ? "1.6rem" : "1rem", lineHeight: 1.3 }}
+          aria-label={`Prévia da fonte ${atual.nome}`}
+        >
+          {titulos ? "Registrando momentos" : "Fotografia autoral para eternizar os momentos que importam."}
+        </p>
+      )}
+    </div>
   );
 }
