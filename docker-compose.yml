@@ -1,0 +1,66 @@
+name: fotografia-digital
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-fotografia}
+      POSTGRES_USER: ${DB_USER:-fotografia}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD no .env}
+      TZ: UTC
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # Porta só no localhost, para acessar com DBeaver/psql em desenvolvimento
+    ports:
+      - "127.0.0.1:${DB_PORTA_LOCAL:-5434}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-fotografia}
+      DB_USER: ${DB_USER:-fotografia}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SITE_URL: ${SITE_URL:-http://localhost:3000}
+      GALERIA_DIAS_RETENCAO: ${GALERIA_DIAS_RETENCAO:-60}
+      UPLOAD_MAX_ARQUIVO: ${UPLOAD_MAX_ARQUIVO:-30MB}
+      UPLOAD_MAX_REQUISICAO: ${UPLOAD_MAX_REQUISICAO:-300MB}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      EMAIL_REMETENTE: ${EMAIL_REMETENTE:-contato@localhost}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@localhost}
+      ADMIN_SENHA: ${ADMIN_SENHA:-}
+      ADMIN_NOME: ${ADMIN_NOME:-Davi}
+      MARCA_DAGUA: ${MARCA_DAGUA:-DAVIFOTOVIDEO}
+    volumes:
+      - fotos_data:/data/fotos
+    # Sem porta publicada: acessível só pela rede interna (via frontend)
+    expose:
+      - "8080"
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      BACKEND_URL: http://backend:8080
+      SITE_URL: ${SITE_URL:-http://localhost:3000}
+    ports:
+      - "${FRONTEND_PORTA:-3000}:3000"
+
+volumes:
+  pgdata:
+  fotos_data:
