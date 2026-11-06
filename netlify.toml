@@ -1,4 +1,6 @@
-# Netlify: o runtime do Next.js (OpenNext) é detectado e instalado automaticamente.
+# Netlify: runtime do Next.js (OpenNext) declarado explicitamente.
+# Sem ele, o Netlify publica a pasta .next como arquivos estáticos e
+# o servidor (API, painel, /imagens, cabeçalhos) não vai para o ar.
 [build]
   command = "npm run build"
   publish = ".next"
@@ -6,3 +8,6 @@
 [build.environment]
   NODE_VERSION = "22"
   NEXT_TELEMETRY_DISABLED = "1"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
