@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,10 +24,17 @@ public class SessaoService {
 
     private final SessaoRepository sessoes;
     private final Clock relogio;
+    /**
+     * Site publicado em HTTPS → cookie sempre Secure, mesmo que o TLS termine num proxy
+     * à frente (onde a requisição chega ao backend como HTTP e isSecure() seria falso).
+     */
+    private final boolean forcarSeguro;
 
-    public SessaoService(SessaoRepository sessoes, Clock relogio) {
+    public SessaoService(SessaoRepository sessoes, Clock relogio,
+            @Value("${app.site.url-publica}") String urlSite) {
         this.sessoes = sessoes;
         this.relogio = relogio;
+        this.forcarSeguro = urlSite.startsWith("https://");
     }
 
     @Transactional
@@ -68,8 +76,8 @@ public class SessaoService {
         return base(tipo, "", seguro).maxAge(0).build();
     }
 
-    private static ResponseCookie.ResponseCookieBuilder base(TipoSessao tipo, String valor, boolean seguro) {
-        // SameSite=Lax + exigência de JSON nas mutações: proteção contra CSRF
-        return ResponseCookie.from(tipo.cookie(), valor).httpOnly(true).secure(seguro).sameSite("Lax").path("/");
+    private ResponseCookie.ResponseCookieBuilder base(TipoSessao tipo, String valor, boolean seguro) {
+        // SameSite=Lax: o navegador não envia o cookie em POST/PUT/DELETE vindos de outro site (CSRF)
+        return ResponseCookie.from(tipo.cookie(), valor).httpOnly(true).secure(seguro || forcarSeguro).sameSite("Lax").path("/");
     }
 }

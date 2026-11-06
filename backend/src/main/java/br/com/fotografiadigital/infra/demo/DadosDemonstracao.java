@@ -51,6 +51,7 @@ public class DadosDemonstracao implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws IOException {
+        log.warn("MODO DEMONSTRAÇÃO ATIVO (perfil demo): cria dados de teste e mostra links de acesso na tela. NÃO USE EM PRODUÇÃO.");
         if (clientes.findByEmailIgnoreCase(EMAIL).isPresent()) return;
         if (!Files.isDirectory(pastaFotos)) {
             log.warn("Demonstração: pasta {} não encontrada; dados não criados", pastaFotos);

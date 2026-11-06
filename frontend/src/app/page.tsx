@@ -15,6 +15,17 @@ import { obterConteudo } from "@/conteudo/obter";
 import { siteUrl } from "@/lib/backend";
 import { linkInstagram } from "@/lib/contato";
 
+/**
+ * JSON para dentro de <script>: "<" vira \u003c (e os separadores de linha
+ * Unicode são escapados), então um texto com </script> não fecha a tag.
+ */
+function jsonSeguro(dados: unknown): string {
+  return JSON.stringify(dados)
+    .replace(/</g, "\\u003c")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const { seo, marca } = await obterConteudo();
   return {
@@ -65,8 +76,8 @@ export default async function Home() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonSeguro(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonSeguro(faqLd) }} />
       <Cabecalho marca={c.marca} aparencia={c.aparencia} />
       <main>
         <Hero hero={c.hero} />

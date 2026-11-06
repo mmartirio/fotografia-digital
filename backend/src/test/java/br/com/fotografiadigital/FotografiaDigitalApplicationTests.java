@@ -34,6 +34,14 @@ class FotografiaDigitalApplicationTests extends TesteIntegracao {
     }
 
     @Test
+    void endpointPublicoDeOrcamentoFoiRemovido() throws Exception {
+        // formulário saiu do site: o endpoint não pode continuar aceitando dados (spam/flood)
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/publico/leads")
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON).content("{\"nome\":\"x\",\"email\":\"a@b.com\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void criaEstruturaDePastasDoArmazenamento() {
         for (String subpasta : new String[] {"site", "portfolio", "galerias"}) {
             assertThat(Files.isDirectory(ARMAZENAMENTO.resolve(subpasta))).as("pasta %s", subpasta).isTrue();

@@ -28,6 +28,8 @@ public class ProcessadorImagem {
     public static final int LADO_MINIATURA = 600;
     public static final int LADO_PREVIA = 1600;
     public static final int LADO_WEB = 2400;
+    /** Acima disso recusa sem decodificar (protege contra "bombas" de descompressão). Câmeras atuais: ~24–60 MP. */
+    public static final long MAX_PIXELS = 150_000_000L;
 
     private final String textoMarca;
 
@@ -40,9 +42,32 @@ public class ProcessadorImagem {
 
     /** Lê a imagem (já orientada) e devolve suas dimensões; falha se não for imagem válida. */
     public BufferedImage carregar(Path origem) {
+        exigirTamanhoSeguro(origem);
         try {
             BufferedImage img = Thumbnails.of(origem.toFile()).scale(1).asBufferedImage();
             return paraRgb(img);
+        } catch (IOException e) {
+            throw new ImagemInvalidaException("Arquivo não é uma imagem JPEG ou PNG válida.", e);
+        }
+    }
+
+    /** Lê só o cabeçalho (largura × altura), sem carregar os pixels na memória. */
+    void exigirTamanhoSeguro(Path origem) {
+        try (javax.imageio.stream.ImageInputStream in = ImageIO.createImageInputStream(origem.toFile())) {
+            var leitores = in == null ? null : ImageIO.getImageReaders(in);
+            if (leitores == null || !leitores.hasNext()) {
+                throw new ImagemInvalidaException("Arquivo não é uma imagem JPEG ou PNG válida.", null);
+            }
+            javax.imageio.ImageReader leitor = leitores.next();
+            try {
+                leitor.setInput(in, true, true);
+                long pixels = (long) leitor.getWidth(0) * leitor.getHeight(0);
+                if (pixels > MAX_PIXELS) {
+                    throw new ImagemInvalidaException("Imagem grande demais (máximo de 150 megapixels).", null);
+                }
+            } finally {
+                leitor.dispose();
+            }
         } catch (IOException e) {
             throw new ImagemInvalidaException("Arquivo não é uma imagem JPEG ou PNG válida.", e);
         }
@@ -67,6 +92,7 @@ public class ProcessadorImagem {
 
     /** Logo: mantém PNG com transparência, até 512px. */
     public Dimensoes gerarLogo(Path origem, Path destino) {
+        exigirTamanhoSeguro(origem);
         try {
             BufferedImage img = Thumbnails.of(origem.toFile()).size(LADO_LOGO, LADO_LOGO).imageType(BufferedImage.TYPE_INT_ARGB)
                     .asBufferedImage();

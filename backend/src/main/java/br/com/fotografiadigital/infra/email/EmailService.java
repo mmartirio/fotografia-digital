@@ -29,6 +29,14 @@ public class EmailService {
         this.remetente = remetente;
     }
 
+    @jakarta.annotation.PostConstruct
+    void avisarSemSmtp() {
+        if (!smtpConfigurado()) {
+            log.warn("SMTP não configurado: e-mails (inclusive LINKS DE ACESSO de clientes) serão apenas registrados no log. "
+                    + "Configure SMTP_HOST antes de usar em produção.");
+        }
+    }
+
     public boolean smtpConfigurado() {
         return smtpHost != null && !smtpHost.isBlank() && mailSender.getIfAvailable() != null;
     }

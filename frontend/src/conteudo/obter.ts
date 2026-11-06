@@ -38,6 +38,13 @@ export function valorSecao(c: ConteudoSite, chave: ChaveSecao): Record<string, u
   return c[chave] as unknown as Record<string, unknown>;
 }
 
+const CHAVES_PERIGOSAS = new Set(["__proto__", "constructor", "prototype"]);
+
+/** Remove chaves que poderiam alterar o protótipo dos objetos (prototype pollution). */
+function semChavesPerigosas(o: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(o).filter(([k]) => !CHAVES_PERIGOSAS.has(k)));
+}
+
 /** Aplica as seções salvas sobre o padrão (seção a seção, campo a campo). */
 export function mesclar(base: ConteudoSite, secoes: RespostaConteudo["secoes"], fotos: FotoPortfolioApi[]): ConteudoSite {
   const c: ConteudoSite = structuredClone(base);
@@ -50,9 +57,9 @@ export function mesclar(base: ConteudoSite, secoes: RespostaConteudo["secoes"], 
     } else if (chave === "rodape") {
       const { slogan, ...resto } = salvo;
       if (typeof slogan === "string") c.slogan = slogan;
-      Object.assign(c.rodape, resto);
+      Object.assign(c.rodape, semChavesPerigosas(resto));
     } else {
-      Object.assign(c[chave] as object, salvo);
+      Object.assign(c[chave] as object, semChavesPerigosas(salvo));
     }
   }
   if (fotos.length > 0) {

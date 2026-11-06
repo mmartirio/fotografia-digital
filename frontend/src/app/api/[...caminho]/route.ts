@@ -20,8 +20,9 @@ async function proxy(req: NextRequest): Promise<Response> {
   req.headers.forEach((valor, chave) => {
     if (!BLOQUEADOS_REQUISICAO.has(chave.toLowerCase())) headers.set(chave, valor);
   });
-  headers.set("x-forwarded-host", req.headers.get("host") ?? "");
-  headers.set("x-forwarded-proto", req.nextUrl.protocol.replace(":", ""));
+  // Atrás de um proxy HTTPS (Caddy/Nginx/Cloudflare) o protocolo real vem em x-forwarded-proto
+  headers.set("x-forwarded-host", req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "");
+  headers.set("x-forwarded-proto", req.headers.get("x-forwarded-proto") ?? req.nextUrl.protocol.replace(":", ""));
 
   const temCorpo = req.method !== "GET" && req.method !== "HEAD";
 
