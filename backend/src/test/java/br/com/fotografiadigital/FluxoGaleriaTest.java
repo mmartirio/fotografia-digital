@@ -23,8 +23,8 @@ import java.util.zip.ZipInputStream;
 
 import javax.imageio.ImageIO;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +33,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.AbstractMockHttpServletRequestBuilder;
 
 import br.com.fotografiadigital.aplicacao.galeria.ExpiracaoGalerias;
 
@@ -80,7 +80,7 @@ class FluxoGaleriaTest extends TesteIntegracao {
         return entrada.getResponse().getCookie("fd_sessao");
     }
 
-    JsonNode corpo(MockHttpServletRequestBuilder req, Cookie cookie, int statusEsperado) throws Exception {
+    JsonNode corpo(AbstractMockHttpServletRequestBuilder<?> req, Cookie cookie, int statusEsperado) throws Exception {
         String s = mvc.perform(req.cookie(cookie)).andExpect(status().is(statusEsperado)).andReturn()
                 .getResponse().getContentAsString();
         return s.isBlank() ? null : json.readTree(s);
