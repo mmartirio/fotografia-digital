@@ -28,8 +28,15 @@ function jsonSeguro(dados: unknown): string {
     .replace(/\u2029/g, "\\u2029");
 }
 
+/** Imagem ao compartilhar o link: a escolhida no painel; se foi excluída, a do topo; por último, a logo. */
+function imagemCompartilhamento(c: Awaited<ReturnType<typeof obterConteudo>>): string {
+  return c.seo.imagemOg || c.hero.imagem.src || c.aparencia.logo || "/marca/icone.png";
+}
+
 export async function generateMetadata(): Promise<Metadata> {
-  const { seo, marca } = await obterConteudo();
+  const c = await obterConteudo();
+  const { seo, marca } = c;
+  const imagem = imagemCompartilhamento(c);
   return {
     title: { absolute: seo.titulo },
     description: seo.descricao,
@@ -40,9 +47,9 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: marca,
       title: seo.titulo,
       description: seo.descricao,
-      images: [{ url: seo.imagemOg }],
+      images: [{ url: imagem }],
     },
-    twitter: { card: "summary_large_image", title: seo.titulo, description: seo.descricao, images: [seo.imagemOg] },
+    twitter: { card: "summary_large_image", title: seo.titulo, description: seo.descricao, images: [imagem] },
   };
 }
 
@@ -57,7 +64,7 @@ export default async function Home() {
     name: c.marca,
     description: c.seo.descricao,
     url,
-    image: new URL(c.seo.imagemOg, url).toString(),
+    image: new URL(imagemCompartilhamento(c), url).toString(),
     logo: new URL(c.aparencia.logo, url).toString(),
     slogan: c.slogan,
     telephone: `+${c.contato.whatsapp}`,

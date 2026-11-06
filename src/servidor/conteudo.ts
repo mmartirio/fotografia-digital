@@ -44,16 +44,33 @@ export async function salvarSecao(chave: string, conteudo: unknown) {
   if (!conteudo || typeof conteudo !== "object" || Array.isArray(conteudo)) throw new ErroConteudo("O conteúdo deve ser um objeto.");
   const texto = JSON.stringify(conteudo);
   if (texto.length > TAMANHO_MAXIMO) throw new ErroConteudo("Conteúdo muito grande.");
+  const anteriores = await imagensEnviadas();
   await sql(
     `INSERT INTO conteudo_secao (chave, conteudo, atualizado_em) VALUES ($1, $2::jsonb, now())
      ON CONFLICT (chave) DO UPDATE SET conteudo = EXCLUDED.conteudo, atualizado_em = now()`,
     [chave, texto],
   );
+  await apagarNaoUsadas(anteriores);
 }
 
 export async function restaurarSecao(chave: string) {
   if (!SECOES.has(chave)) throw new ErroConteudo("Seção desconhecida.", 404);
+  const anteriores = await imagensEnviadas();
   await sql("DELETE FROM conteudo_secao WHERE chave = $1", [chave]);
+  await apagarNaoUsadas(anteriores);
+}
+
+/** URLs de imagens enviadas pelo painel (/imagens/...) citadas nos textos salvos do site. */
+async function imagensEnviadas(): Promise<Set<string>> {
+  const texto = JSON.stringify(await secoesSalvas());
+  return new Set(texto.match(/\/imagens\/(?:site|portfolio)\/[0-9a-f-]{36}\.(?:jpg|png|webp)/g) ?? []);
+}
+
+/** Ao trocar ou excluir uma imagem, apaga o arquivo antigo se nenhuma outra parte do site o usa. */
+async function apagarNaoUsadas(anteriores: Set<string>) {
+  if (anteriores.size === 0) return;
+  const atuais = await imagensEnviadas();
+  for (const url of anteriores) if (!atuais.has(url)) await excluirImagem(url);
 }
 
 // ---- portfólio ---------------------------------------------------------------------------
@@ -111,4 +128,31 @@ export async function excluirFoto(id: string) {
   if (!f) throw new ErroConteudo("Foto não encontrada.", 404);
   await excluirImagem(f.src);
   await excluirImagem(f.miniatura);
+}
+
+/**
+ * Copia as fotos de exemplo do portfólio para o banco, para poderem ser editadas, reordenadas ou excluídas
+ * uma a uma. Só funciona com o portfólio vazio (é o que o site mostra enquanto não há fotos enviadas).
+ */
+export async function importarExemplos(fotos: { src: string; largura: number; altura: number; alt: string; categoria: string }[]) {
+  const [{ total }] = await sql<{ total: number }>("SELECT count(*)::int AS total FROM foto_portfolio");
+  if (total > 0) throw new ErroConteudo("O portfólio já tem fotos: as de exemplo não estão mais no site.");
+  for (const f of fotos) await adicionarFoto({ ...f, miniatura: f.src });
+  return fotos.length;
+}
+
+/** Exclui várias fotos de uma vez (ids inexistentes são ignorados). Devolve quantas saíram. */
+export async function excluirFotos(ids: unknown): Promise<number> {
+  if (!Array.isArray(ids) || ids.length === 0 || ids.length > 500) throw new ErroConteudo("Lista inválida.", 400);
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  let total = 0;
+  for (const id of ids) {
+    if (typeof id !== "string" || !uuid.test(id)) continue;
+    const [f] = await sql<FotoPortfolio>("DELETE FROM foto_portfolio WHERE id = $1 RETURNING src, miniatura", [id]);
+    if (!f) continue;
+    total++;
+    await excluirImagem(f.src);
+    if (f.miniatura !== f.src) await excluirImagem(f.miniatura);
+  }
+  return total;
 }

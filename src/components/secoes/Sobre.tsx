@@ -6,12 +6,15 @@ import { Revelar } from "../Revelar";
 export function Sobre({ sobre }: { sobre: ConteudoSite["sobre"] }) {
   return (
     <section id="sobre" className="secao scroll-mt-16 bg-superficie lg:scroll-mt-20">
-      <div className="container-site grid items-center gap-12 md:grid-cols-2 lg:gap-24">
-        <Revelar className="relative aspect-[4/5] overflow-hidden rounded-[2rem] md:order-last">
-          <Image src={sobre.imagem.src} alt={sobre.imagem.alt} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
-        </Revelar>
+      <div className={`container-site grid items-center gap-12 lg:gap-24 ${sobre.imagem.src ? "md:grid-cols-2" : ""}`}>
+        {/* sem foto (excluída no painel): só o texto */}
+        {sobre.imagem.src && (
+          <Revelar className="relative aspect-[4/5] overflow-hidden rounded-[2rem] md:order-last">
+            <Image src={sobre.imagem.src} alt={sobre.imagem.alt} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
+          </Revelar>
+        )}
 
-        <div>
+        <div className={sobre.imagem.src ? "" : "mx-auto max-w-3xl"}>
           <Revelar>
             <p className="etiqueta">{sobre.etiqueta}</p>
             <h2 className="mt-4 text-4xl leading-[1.1] sm:text-5xl lg:text-6xl">{sobre.titulo}</h2>

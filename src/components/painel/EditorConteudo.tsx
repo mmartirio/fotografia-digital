@@ -411,19 +411,20 @@ function AcoesItem({ aoSubir, aoDescer, aoRemover }: { aoSubir: () => void; aoDe
   );
 }
 
-type ImagemEnviada = { src: string; largura: number; altura: number };
+export type ImagemEnviada = { src: string; largura: number; altura: number };
 
-function BotaoEnviarImagem({ aoEnviar }: { aoEnviar: (img: ImagemEnviada) => void }) {
+/** Envia uma imagem (reduzida no navegador) e devolve a URL e as dimensões. */
+export function BotaoEnviarImagem({ aoEnviar, rotulo = "Trocar imagem" }: { aoEnviar: (img: ImagemEnviada) => void | Promise<void>; rotulo?: string }) {
   const [progresso, setProgresso] = useState<number | null>(null);
   const [erro, setErro] = useState("");
   return (
     <div>
       <label className="botao-secundario min-h-10 cursor-pointer px-4">
         <IconeUpload className="size-4" />
-        {progresso !== null ? `Enviando ${Math.round(progresso * 100)}%` : "Trocar imagem"}
+        {progresso !== null ? `Enviando ${Math.round(progresso * 100)}%` : rotulo}
         <input
           type="file"
-          accept="image/jpeg,image/png"
+          accept="image/jpeg,image/png,image/webp"
           className="hidden"
           onChange={async (e) => {
             const arquivo = e.target.files?.[0];
@@ -433,7 +434,7 @@ function BotaoEnviarImagem({ aoEnviar }: { aoEnviar: (img: ImagemEnviada) => voi
             setProgresso(0);
             try {
               const reduzida = await redimensionar(arquivo, LADO_FOTO);
-              aoEnviar(await enviarArquivo<ImagemEnviada>("/api/painel/imagens", { arquivo: reduzida }, setProgresso));
+              await aoEnviar(await enviarArquivo<ImagemEnviada>("/api/painel/imagens", { arquivo: reduzida }, setProgresso));
             } catch (err) {
               setErro(err instanceof Error ? err.message : "Falhou.");
             } finally {
@@ -452,8 +453,12 @@ function CampoImagem({ chave, valor, caminho, aoMudar }: { chave: string; valor:
     <fieldset className="rounded-sm border border-borda p-3">
       <legend className="px-1 text-sm font-medium">{rotulo(chave)}</legend>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-        {/* eslint-disable-next-line @next/next/no-img-element -- prévia no painel */}
-        <img src={String(valor.src)} alt="" className="aspect-[4/3] w-full rounded-xl object-cover sm:w-48" />
+        {valor.src ? (
+          // eslint-disable-next-line @next/next/no-img-element -- prévia no painel
+          <img src={String(valor.src)} alt="" className="aspect-[4/3] w-full rounded-xl object-cover sm:w-48" />
+        ) : (
+          <span className="flex aspect-[4/3] w-full items-center justify-center rounded-xl bg-superficie text-xs text-texto-suave sm:w-48">Sem imagem</span>
+        )}
         <div className="flex flex-1 flex-col gap-3">
           <BotaoEnviarImagem aoEnviar={(img) => aoMudar(caminho, { ...valor, ...img })} />
           <label className="flex flex-col gap-1 text-sm font-medium">

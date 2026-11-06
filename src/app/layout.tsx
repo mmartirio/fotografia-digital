@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: marca, template: `%s | ${marca}` },
     description: "Fotografia e vídeo de casamentos, ensaios e eventos. Registrando momentos desde 2018.",
     // Favicon = logo escolhida no painel (Aparência)
-    icons: { icon: aparencia.logo, apple: "/marca/apple-icon.png" },
+    icons: { icon: aparencia.logo, apple: aparencia.logo || "/marca/apple-icon.png" },
     // Google Search Console: <meta name="google-site-verification"> (configurado no painel → SEO)
     ...(verificacao ? { verification: { google: verificacao } } : {}),
   };

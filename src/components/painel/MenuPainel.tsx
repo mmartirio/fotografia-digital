@@ -8,7 +8,7 @@ import type { ConteudoSite } from "@/conteudo/tipos";
 
 const ITENS = [
   { href: "/painel", rotulo: "Início", icone: "M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" },
-  { href: "/painel/portfolio", rotulo: "Portfólio", icone: "M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z" },
+  { href: "/painel/imagens", rotulo: "Imagens", icone: "M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4M15 9.5a1.5 1.5 0 1 0 0-.01" },
   { href: "/painel/site", rotulo: "Editar site", icone: "M4 6h16M4 12h10M4 18h13" },
   { href: "/painel/conta", rotulo: "Conta", icone: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0" },
 ];

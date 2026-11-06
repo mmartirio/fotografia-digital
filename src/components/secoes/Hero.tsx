@@ -18,9 +18,12 @@ export function Hero({ hero }: { hero: ConteudoSite["hero"] }) {
   const opacidade = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
 
   return (
-    <section id="inicio" ref={ref} className="relative h-[100svh] min-h-[560px] overflow-hidden">
+    <section id="inicio" ref={ref} className="relative h-[100svh] min-h-[560px] overflow-hidden bg-escuro">
       <motion.div className="absolute inset-0" style={{ scale: escala }}>
-        <Image src={hero.imagem.src} alt={hero.imagem.alt} fill priority sizes="100vw" className="object-cover object-[60%_center]" />
+        {/* sem foto (excluída no painel): fica o fundo escuro da marca */}
+        {hero.imagem.src && (
+          <Image src={hero.imagem.src} alt={hero.imagem.alt} fill priority sizes="100vw" className="object-cover object-[60%_center]" />
+        )}
       </motion.div>
       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
 

@@ -115,3 +115,28 @@ describe("armazenamento local de imagens", () => {
     expect(await lerImagem("../../package.json")).toBeNull();
   });
 });
+
+describe("limpeza de imagens trocadas ou excluídas", () => {
+  it("apaga o arquivo antigo quando nenhuma seção o usa mais", async () => {
+    const os = await import("node:os");
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    process.env.ARMAZENAMENTO_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "imagens-"));
+    const { chaveDaUrl, lerImagem, salvarImagem } = await import("@/servidor/armazenamento");
+    const antiga = await salvarImagem("site", "11111111-1111-4111-8111-111111111111.jpg", Buffer.from("a"), "image/jpeg");
+    const nova = await salvarImagem("site", "22222222-2222-4222-8222-222222222222.jpg", Buffer.from("b"), "image/jpeg");
+
+    await salvarSecao("hero", { imagem: { src: antiga, largura: 1, altura: 1, alt: "" } });
+    await salvarSecao("sobre", { imagem: { src: antiga, largura: 1, altura: 1, alt: "" } });
+    // trocar no topo: a antiga continua no Sobre, então fica
+    await salvarSecao("hero", { imagem: { src: nova, largura: 1, altura: 1, alt: "" } });
+    expect(await lerImagem(chaveDaUrl(antiga)!)).not.toBeNull();
+    // excluir no Sobre: ninguém mais usa a antiga, então sai
+    await salvarSecao("sobre", { imagem: { src: "", largura: 0, altura: 0, alt: "" } });
+    expect(await lerImagem(chaveDaUrl(antiga)!)).toBeNull();
+    // restaurar o topo ao original também libera a nova
+    await restaurarSecao("hero");
+    expect(await lerImagem(chaveDaUrl(nova)!)).toBeNull();
+    await restaurarSecao("sobre");
+  });
+});

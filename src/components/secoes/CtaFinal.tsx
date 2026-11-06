@@ -8,8 +8,8 @@ import { Revelar } from "../Revelar";
 export function CtaFinal({ cta, contato }: { cta: ConteudoSite["ctaFinal"]; contato: ConteudoSite["contato"] }) {
   return (
     <section id="chamada-final">
-      <div className="relative overflow-hidden py-24 md:py-36">
-        <Image src={cta.imagem.src} alt="" fill sizes="100vw" className="object-cover" aria-hidden />
+      <div className="relative overflow-hidden bg-escuro py-24 md:py-36">
+        {cta.imagem.src && <Image src={cta.imagem.src} alt="" fill sizes="100vw" className="object-cover" aria-hidden />}
         <div className="absolute inset-0 bg-escuro/65" />
         <Revelar className="container-site relative flex flex-col items-center text-center text-white">
           <h2 className="max-w-3xl text-4xl leading-[1.1] sm:text-6xl lg:text-7xl">{cta.titulo}</h2>

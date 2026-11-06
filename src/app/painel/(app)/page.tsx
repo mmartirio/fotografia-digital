@@ -7,7 +7,7 @@ import { siteUrl } from "@/lib/site";
 import { listarPortfolio } from "@/servidor/conteudo";
 
 const ATALHOS = [
-  { href: "/painel/portfolio", titulo: "Portfólio", texto: "Adicione, ordene e destaque as fotos do site." },
+  { href: "/painel/imagens", titulo: "Imagens", texto: "Fotos do topo, do Sobre, da chamada final e todas as fotos do portfólio." },
   { href: "/painel/site", titulo: "Editar site", texto: "Textos, imagens, cores, fontes e contatos." },
   { href: "/painel/site?secao=seo", titulo: "SEO e Google", texto: "Título no Google, Search Console e Analytics." },
   { href: "/painel/conta", titulo: "Conta", texto: "Senha e verificação em duas etapas." },
