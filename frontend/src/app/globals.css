@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+/*
+ * Identidade DAVIFOTOVIDEO (logo + bio.site):
+ *   grafite #38383f (DAVI) · azul #3070b8 (FOTO) · celeste #48a8e0 (VIDEO) · água #b0fffa (bio.site)
+ *   Fontes: Playfair Display (títulos) · Roboto (texto) · Bebas Neue (marca)
+ * MOBILE FIRST: estilos base valem para 360px; breakpoints só adicionam.
+ */
+@theme {
+  --color-fundo: #fbfbfa;
+  --color-superficie: #f0f5f8;
+  --color-borda: #dbe2e8;
+  --color-texto: #2e2f35;
+  --color-texto-suave: #5d636d;
+  --color-grafite: #38383f;
+  --color-escuro: #1f2025;
+  --color-destaque: #3070b8;
+  --color-destaque-forte: #245a96;
+  --color-celeste: #48a8e0;
+  --color-agua: #b0fffa;
+  --color-whatsapp: #25d366;
+
+  --font-titulo: var(--f-playfair);
+  --font-corpo: var(--f-roboto);
+  --font-marca: var(--font-bebas);
+
+  --breakpoint-sm: 40rem;   /* 640px */
+  --breakpoint-md: 48rem;   /* 768px */
+  --breakpoint-lg: 64rem;   /* 1024px */
+  --breakpoint-xl: 80rem;   /* 1280px */
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-fundo text-texto font-corpo antialiased;
+    min-height: 100dvh;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-titulo font-medium tracking-tight;
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-destaque;
+  }
+
+  /*
+   * Animação de clique em todos os botões: "afunda" levemente ao pressionar.
+   * Usa a propriedade `scale` (não `transform`), então não conflita com
+   * translate/rotate dos utilitários nem com as animações do Framer Motion.
+   */
+  button:not(:disabled):active,
+  a.botao:active,
+  a[class*="botao-"]:active,
+  [role="button"]:active,
+  [role="tab"]:active {
+    scale: 0.96;
+  }
+  button,
+  a.botao,
+  a[class*="botao-"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    @apply bg-agua text-grafite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Alvo de toque mínimo de 44px (mobile first) */
+@utility botao {
+  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-7 text-sm font-medium transition-all duration-200 active:scale-[0.96];
+}
+@utility botao-primario {
+  @apply botao bg-grafite text-white hover:bg-destaque hover:shadow-lg hover:shadow-destaque/20;
+}
+@utility botao-secundario {
+  @apply botao border border-borda bg-white text-texto hover:border-grafite;
+}
+/* Sobre fotos escuras (hero, CTA final) */
+@utility botao-claro {
+  @apply botao border border-white/40 bg-white/10 text-white backdrop-blur-md hover:bg-white hover:text-grafite;
+}
+/* Texto pequeno acima dos títulos: limpo, sem fonte condensada (essa fica só na logo) */
+@utility etiqueta {
+  @apply font-corpo text-xs font-semibold uppercase tracking-[0.2em] text-destaque;
+}
+@utility container-site {
+  @apply mx-auto w-full max-w-7xl px-5 md:px-10;
+}
+@utility cartao-site {
+  @apply rounded-3xl bg-white p-7 ring-1 ring-black/5 md:p-8;
+}
+@utility secao {
+  @apply py-24 md:py-32;
+}
