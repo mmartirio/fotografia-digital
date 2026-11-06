@@ -5,7 +5,7 @@
 | Tema | Decisão |
 |------|---------|
 | Frontend | Next.js 15 (App Router) + TypeScript + Tailwind CSS + Framer Motion |
-| Backend | Spring Boot 3.5.x / Java 21 |
+| Backend | Spring Boot 4.1.x / Java 21 (migrado da 3.5 em 2026-11-06 por CVE crítico no Spring 6.2) |
 | Banco | PostgreSQL 16 |
 | Fotos | Pasta `/data/fotos` dentro do container backend, persistida via volume Docker (`fotos_data`). Banco guarda só metadados |
 | Containers | 3: `frontend`, `backend`, `db` |

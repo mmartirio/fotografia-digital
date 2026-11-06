@@ -10,7 +10,7 @@ Plano completo e decisões: [PLANO.md](PLANO.md). Metodologia **mobile first**.
 | Container  | Tecnologia                                           | Porta              |
 |------------|------------------------------------------------------|--------------------|
 | `frontend` | Next.js 15 · TypeScript · Tailwind 4 · Framer Motion | 3000 (pública)     |
-| `backend`  | Spring Boot 3.5 · Java 21 · Flyway                   | 8080 (só interna)  |
+| `backend`  | Spring Boot 4.1 · Java 21 · Flyway                   | 8080 (só interna)  |
 | `db`       | PostgreSQL 16                                        | 5434 (só localhost)|
 
 As fotos ficam em `/data/fotos` no container `backend` (volume `fotos_data`).
@@ -96,3 +96,13 @@ frontend/
   src/app/api/[...caminho]  proxy para o backend
   src/lib/                utilitários
 ```
+
+## Segurança
+
+- **Painel:** senha + **verificação em duas etapas** (TOTP: Google Authenticator, Microsoft Authenticator, Authy), ativada em *Conta*. Inclui 10 códigos de recuperação de uso único. Segredos cifrados no banco (AES-256-GCM) com a chave `APP_CHAVE_CRIPTO` (ou arquivo gerado no volume de fotos: faça backup dele junto com o banco).
+- **Bloqueio:** 5 falhas (senha ou código) em 15 min bloqueiam a conta temporariamente.
+- **Sessões:** cookies `httpOnly` + `SameSite=Lax`; com `SITE_URL` em `https://`, sempre `Secure`.
+- **Área do cliente:** link de acesso de uso único (30 min); o cliente só acessa as próprias galerias; prévias com marca d'água.
+- **Cabeçalhos:** CSP `frame-ancestors 'none'`, `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS.
+- **Produção:** configure `SMTP_HOST` (sem SMTP os links de acesso vão para o log) e **não** use `docker-compose.dev.yml` (perfil `demo`).
+- **Varredura:** `docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image <imagem>` e `npm audit --omit=dev`.
