@@ -132,6 +132,10 @@
 }
 @utility secao {
   @apply py-24 md:py-32;
+  /* Fora da tela, o navegador pula estilo/layout/pintura da seção até ela se aproximar (menos trabalho no carregamento).
+     "auto" lembra a altura real depois da primeira vez, para a rolagem não pular. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
 }
 
 /*
@@ -211,5 +215,110 @@
 @media (prefers-reduced-motion: reduce) {
   .entrada-foto {
     animation: none;
+  }
+}
+
+/* ---- Animações em CSS (substituem a framer-motion: zero JavaScript de animação) ---- */
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes aparecer-zoom {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+@keyframes subir-aviso {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@keyframes vir-da-esquerda {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+}
+@keyframes entrar-pela-direita {
+  from {
+    opacity: 0;
+    transform: translateX(40%);
+  }
+}
+@keyframes entrar-pela-esquerda {
+  from {
+    opacity: 0;
+    transform: translateX(-40%);
+  }
+}
+@keyframes estourar {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.anim-aparecer {
+  animation: aparecer 0.2s ease-out both;
+}
+.anim-aparecer-zoom {
+  animation: aparecer-zoom 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.anim-aviso {
+  animation: subir-aviso 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.anim-item-menu {
+  animation: vir-da-esquerda 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.anim-slide-proximo {
+  animation: entrar-pela-direita 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.anim-slide-anterior {
+  animation: entrar-pela-esquerda 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+/* Botão flutuante do WhatsApp: surge 1,2 s depois de abrir a página */
+.anim-whatsapp {
+  animation: estourar 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 1.2s both;
+}
+
+/* Topo: zoom leve da foto e texto subindo ao rolar, guiados pela rolagem (sem JS).
+   Navegadores sem suporte simplesmente mostram o topo parado. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes topo-foto {
+      from {
+        transform: scale(1.02);
+      }
+      to {
+        transform: scale(1.12);
+      }
+    }
+    @keyframes topo-texto {
+      to {
+        transform: translateY(-20%);
+        opacity: 0;
+      }
+    }
+    .topo-foto {
+      animation: topo-foto linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 100svh;
+    }
+    .topo-texto {
+      animation: topo-texto linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 60svh;
+    }
   }
 }

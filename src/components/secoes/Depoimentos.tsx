@@ -1,8 +1,8 @@
 "use client";
 
-import { AnimatePresence, motion, type PanInfo } from "framer-motion";
 import { useState } from "react";
 import type { ConteudoSite } from "@/conteudo/tipos";
+import { useDeslizar } from "@/lib/deslizar";
 import { IconeSeta } from "../Icones";
 import { Revelar } from "../Revelar";
 import { TituloSecao } from "../TituloSecao";
@@ -39,10 +39,7 @@ export function Depoimentos({ depoimentos }: { depoimentos: ConteudoSite["depoim
   const total = itens.length;
 
   const ir = (passo: number) => setAtual(([i]) => [(i + passo + total) % total, passo]);
-  const aoArrastar = (_: unknown, info: PanInfo) => {
-    if (info.offset.x < -50 || info.velocity.x < -400) ir(1);
-    else if (info.offset.x > 50 || info.velocity.x > 400) ir(-1);
-  };
+  const deslizar = useDeslizar((passo) => total > 1 && ir(passo));
 
   if (total === 0) return null;
 
@@ -54,30 +51,16 @@ export function Depoimentos({ depoimentos }: { depoimentos: ConteudoSite["depoim
         {/* Mobile: carrossel */}
         <div className="md:hidden" aria-roledescription="carrossel" aria-label="Depoimentos">
           <div className="relative overflow-hidden">
-            <AnimatePresence mode="popLayout" initial={false} custom={direcao}>
-              <motion.div
-                key={indice}
-                custom={direcao}
-                variants={{
-                  entra: (d: number) => ({ x: d >= 0 ? "100%" : "-100%", opacity: 0 }),
-                  centro: { x: 0, opacity: 1 },
-                  sai: (d: number) => ({ x: d >= 0 ? "-100%" : "100%", opacity: 0 }),
-                }}
-                initial="entra"
-                animate="centro"
-                exit="sai"
-                transition={{ type: "spring", stiffness: 300, damping: 32 }}
-                drag={total > 1 ? "x" : false}
-                dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={0.4}
-                onDragEnd={aoArrastar}
-                className="touch-pan-y"
-                aria-roledescription="slide"
-                aria-label={`${indice + 1} de ${total}`}
-              >
-                <Cartao d={itens[indice]} />
-              </motion.div>
-            </AnimatePresence>
+            {/* key muda a cada troca: o novo depoimento entra pelo lado certo (animação em CSS) */}
+            <div
+              key={indice}
+              {...deslizar}
+              className={`touch-pan-y ${direcao > 0 ? "anim-slide-proximo" : direcao < 0 ? "anim-slide-anterior" : ""}`}
+              aria-roledescription="slide"
+              aria-label={`${indice + 1} de ${total}`}
+            >
+              <Cartao d={itens[indice]} />
+            </div>
           </div>
 
           {total > 1 && (

@@ -21,6 +21,10 @@ const nextConfig: NextConfig = {
   // PGlite (banco local de desenvolvimento) carrega arquivos .wasm: fica fora do bundle
   serverExternalPackages: ["@electric-sql/pglite"],
   poweredByHeader: false,
+  experimental: {
+    // CSS embutido no HTML: elimina a requisição que bloqueava a primeira pintura (PageSpeed)
+    inlineCss: true,
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     // Mobile first: tamanhos começando em telas pequenas

@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { CSSProperties } from "react";
 import { Analytics } from "@/components/Analytics";
-import { ProvedorMovimento } from "@/components/ProvedorMovimento";
 import { obterConteudo } from "@/conteudo/obter";
 import { siteUrl } from "@/lib/site";
 import { fonteValida, varFonte } from "@/lib/fontes-lista";
@@ -44,7 +43,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body>
         {/* Liga as animações de "revelar ao rolar" só quando há JavaScript (sem JS, tudo visível) */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js-pronto')" }} />
-        <ProvedorMovimento>{children}</ProvedorMovimento>
+        {children}
         {/* Google Analytics 4 com consentimento (só carrega após o visitante aceitar) */}
         <Analytics idMedicao={idAnalyticsValido(seo.googleAnalyticsId)} />
       </body>

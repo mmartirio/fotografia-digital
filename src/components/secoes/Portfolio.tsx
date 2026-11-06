@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { AnimatePresence, motion, type PanInfo } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ConteudoSite } from "@/conteudo/tipos";
+import { useDeslizar } from "@/lib/deslizar";
 import { IconeFechar, IconeSeta } from "../Icones";
 import { TituloSecao } from "../TituloSecao";
 
@@ -44,10 +44,7 @@ export function Portfolio({ portfolio }: { portfolio: ConteudoSite["portfolio"] 
     };
   }, [aberta, navegar]);
 
-  const aoArrastar = (_: unknown, info: PanInfo) => {
-    if (info.offset.x < -60) navegar(1);
-    else if (info.offset.x > 60) navegar(-1);
-  };
+  const deslizar = useDeslizar(navegar, 60);
 
   const filtros = [{ slug: "todas", nome: "Todas" }, ...portfolio.categorias];
   const atual = aberta !== null ? fotos[aberta] : null;
@@ -123,32 +120,22 @@ export function Portfolio({ portfolio }: { portfolio: ConteudoSite["portfolio"] 
       </div>
 
       {/* Lightbox */}
-      <AnimatePresence>
-        {atual && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
+      {atual && (
+          <div
+            className="anim-aparecer fixed inset-0 z-50 flex items-center justify-center bg-black/95"
             role="dialog"
             aria-modal="true"
             aria-label={atual.alt}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             onClick={() => setAberta(null)}
           >
-            <motion.div
+            <div
               key={atual.src}
-              className="relative h-[80svh] w-full max-w-5xl touch-pan-y px-2"
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.6}
-              onDragEnd={aoArrastar}
+              className="anim-aparecer-zoom relative h-[80svh] w-full max-w-5xl touch-pan-y px-2"
+              {...deslizar}
               onClick={(e) => e.stopPropagation()}
             >
               <Image src={atual.src} alt={atual.alt} fill sizes="100vw" className="pointer-events-none object-contain" />
-            </motion.div>
+            </div>
 
             <p className="absolute bottom-5 left-0 right-0 px-16 text-center text-sm text-white/70">
               {(aberta ?? 0) + 1} / {fotos.length}
@@ -184,9 +171,8 @@ export function Portfolio({ portfolio }: { portfolio: ConteudoSite["portfolio"] 
             >
               <IconeSeta direcao="direita" className="text-white" />
             </button>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
     </section>
   );
 }

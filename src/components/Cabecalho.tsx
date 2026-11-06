@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { IconeFechar, IconeMenu } from "./Icones";
 import { LogoMarca } from "./Marca";
@@ -76,24 +75,14 @@ export function Cabecalho({ marca, aparencia }: { marca: string; aparencia: Cont
     </header>
 
       {/* Fora do header: backdrop-filter criaria um containing block para o fixed */}
-      <AnimatePresence>
-        {aberto && (
-          <motion.div
+      {aberto && (
+          <div
             id="menu-mobile"
-            className="fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto bg-fundo lg:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            className="anim-aparecer fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto bg-fundo lg:hidden"
           >
             <ul className="container-site flex flex-col pt-4">
               {LINKS.map((l, i) => (
-                <motion.li
-                  key={l.href}
-                  initial={{ opacity: 0, x: -16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.04 * i }}
-                >
+                <li key={l.href} className="anim-item-menu" style={{ animationDelay: `${0.04 * i}s` }}>
                   <a
                     href={l.href}
                     className="flex min-h-12 items-center border-b border-black/5 py-3 text-lg text-texto/90 transition-colors active:text-destaque"
@@ -101,12 +90,11 @@ export function Cabecalho({ marca, aparencia }: { marca: string; aparencia: Cont
                   >
                     {l.texto}
                   </a>
-                </motion.li>
+                </li>
               ))}
             </ul>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
     </>
   );
 }

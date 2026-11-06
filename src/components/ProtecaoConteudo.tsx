@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 /**
@@ -57,19 +56,15 @@ export function ProtecaoConteudo({ children }: { children: ReactNode }) {
   return (
     <div data-protegido>
       {children}
-      <AnimatePresence>
-        {aviso && (
-          <motion.div
-            role="status"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 12 }}
-            className="fixed inset-x-4 bottom-24 z-[80] mx-auto max-w-sm rounded-2xl bg-grafite px-5 py-3 text-center text-sm text-white shadow-lg"
-          >
-            {aviso}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {aviso && (
+        <div
+          key={aviso}
+          role="status"
+          className="anim-aviso fixed inset-x-4 bottom-24 z-[80] mx-auto max-w-sm rounded-2xl bg-grafite px-5 py-3 text-center text-sm text-white shadow-lg"
+        >
+          {aviso}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { BotaoWhatsapp } from "@/components/BotaoWhatsapp";
 import { Cabecalho } from "@/components/Cabecalho";
+import { ObservadorRevelar } from "@/components/ObservadorRevelar";
 import { ProtecaoConteudo } from "@/components/ProtecaoConteudo";
 import { Rodape } from "@/components/Rodape";
 import { ComoFunciona } from "@/components/secoes/ComoFunciona";
@@ -101,6 +102,7 @@ export default async function Home() {
       </main>
       <Rodape marca={c.marca} slogan={c.slogan} contato={c.contato} nomeLogo={c.aparencia.nomeLogo} coresNome={c.aparencia.coresNome} rodape={c.rodape} analyticsAtivo={!!idAnalyticsValido(c.seo.googleAnalyticsId)} />
       <BotaoWhatsapp numero={c.contato.whatsapp} mensagem={c.contato.mensagemWhatsapp} />
+      <ObservadorRevelar />
     </ProtecaoConteudo>
   );
 }

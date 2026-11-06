@@ -1,33 +1,23 @@
-"use client";
-
 import Image from "next/image";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
 import type { ConteudoSite } from "@/conteudo/tipos";
 
 /**
  * Capa: foto em tela cheia (ponta a ponta, sem cantos arredondados) com o texto sobre ela.
  * O texto nasce visível (entrada só por deslocamento, em CSS): não espera o JavaScript,
- * o que mantém o LCP baixo no PageSpeed. O parallax na rolagem continua.
+ * o que mantém o LCP baixo no PageSpeed. O parallax na rolagem é feito em CSS (animation-timeline).
  */
 export function Hero({ hero }: { hero: ConteudoSite["hero"] }) {
-  const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const escala = useTransform(scrollYProgress, [0, 1], [1.02, 1.12]);
-  const yTexto = useTransform(scrollYProgress, [0, 1], ["0%", "-20%"]);
-  const opacidade = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
-
   return (
-    <section id="inicio" ref={ref} className="relative h-[100svh] min-h-[560px] overflow-hidden bg-escuro">
-      <motion.div className="absolute inset-0" style={{ scale: escala }}>
+    <section id="inicio" className="relative h-[100svh] min-h-[560px] overflow-hidden bg-escuro">
+      <div className="topo-foto absolute inset-0">
         {/* sem foto (excluída no painel): fica o fundo escuro da marca */}
         {hero.imagem.src && (
           <Image src={hero.imagem.src} alt={hero.imagem.alt} fill priority sizes="100vw" className="object-cover object-[60%_center]" />
         )}
-      </motion.div>
+      </div>
       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
 
-      <motion.div className="absolute inset-x-0 bottom-0 pb-24 text-white sm:pb-14 lg:pb-20" style={{ y: yTexto, opacity: opacidade }}>
+      <div className="topo-texto absolute inset-x-0 bottom-0 pb-24 text-white sm:pb-14 lg:pb-20">
         <div className="container-site entrada-topo flex flex-col gap-5">
           <span className="w-max rounded-full border border-white/30 bg-white/10 px-4 py-1.5 text-xs font-medium tracking-wide backdrop-blur-md">
             {hero.etiqueta}
@@ -45,7 +35,7 @@ export function Hero({ hero }: { hero: ConteudoSite["hero"] }) {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 }
