@@ -88,3 +88,30 @@ describe("imagens enviadas", () => {
     await expect(validarImagem(ok)).resolves.toMatchObject({ extensao: "png" });
   });
 });
+
+describe("armazenamento local de imagens", () => {
+  it("salva, lê pela URL /imagens e exclui", async () => {
+    const os = await import("node:os");
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    process.env.ARMAZENAMENTO_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "imagens-"));
+    const { chaveDaUrl, excluirImagem, lerImagem, salvarImagem } = await import("@/servidor/armazenamento");
+
+    const url = await salvarImagem("portfolio", "0b6f1c3e-1d2a-4c5b-8e9f-123456789abc.png", Buffer.from("png"), "image/png");
+    expect(url).toBe("/imagens/portfolio/0b6f1c3e-1d2a-4c5b-8e9f-123456789abc.png");
+    const lida = await lerImagem(chaveDaUrl(url)!);
+    expect(lida?.tipo).toBe("image/png");
+    expect(Buffer.from(lida!.bytes as Buffer).toString()).toBe("png");
+
+    await excluirImagem(url);
+    expect(await lerImagem(chaveDaUrl(url)!)).toBeNull();
+  });
+
+  it("recusa chaves fora do padrão (path traversal)", async () => {
+    const { chaveDaUrl, lerImagem } = await import("@/servidor/armazenamento");
+    expect(chaveDaUrl("/imagens/../.env")).toBeNull();
+    expect(chaveDaUrl("/imagens/portfolio/../../segredo.png")).toBeNull();
+    expect(chaveDaUrl("/exemplos/foto.jpg")).toBeNull();
+    expect(await lerImagem("../../package.json")).toBeNull();
+  });
+});

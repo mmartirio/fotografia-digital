@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.15",
-    "@vercel/blob": "^2.8.2",
+    "@netlify/blobs": "^11.1.7",
     "bcryptjs": "^3.0.3",
     "framer-motion": "^14.9.1",
     "next": "15.5.29",
@@ -40,7 +40,9 @@
   "overrides": {
     "next": {
       "postcss": "^8.5.32"
-    },
-    "zod": "^4.6.7"
+    }
+  },
+  "engines": {
+    "node": ">=22 <23"
   }
 }

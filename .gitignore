@@ -20,13 +20,14 @@ next-env.d.ts
 # Banco local (PGlite) e uploads do desenvolvimento
 /.dados/
 /public/uploads/
+/.netlify/
 
 # Ambiente (segredos)
 .env
 .env.*
 !.env.example
 
-# Vercel
+# Vercel (versão anterior)
 .vercel
 
 # IDE / SO / debug

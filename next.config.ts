@@ -25,8 +25,6 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     // Mobile first: tamanhos começando em telas pequenas
     deviceSizes: [360, 414, 640, 768, 1024, 1280, 1600, 1920],
-    // Fotos enviadas pelo painel ficam no Vercel Blob
-    remotePatterns: [{ protocol: "https", hostname: "*.public.blob.vercel-storage.com" }],
   },
   async headers() {
     return [{ source: "/:caminho*", headers: cabecalhosSeguranca }];

@@ -1,11 +1,11 @@
 /**
  * URL pública do site (SEO, sitemap, links do painel).
- * Ordem: SITE_URL (domínio próprio) → domínio de produção do Vercel → URL do deploy → localhost.
+ * Ordem: SITE_URL (domínio próprio) → URL principal do site no Netlify → localhost.
  */
 export function siteUrl(): URL {
   const definida = process.env.SITE_URL?.trim();
   if (definida) return new URL(definida);
-  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
-  if (vercel) return new URL(`https://${vercel}`);
+  // URL: variável do Netlify com o endereço principal (domínio próprio ou *.netlify.app)
+  if (process.env.URL) return new URL(process.env.URL);
   return new URL(`http://localhost:${process.env.PORT ?? 3000}`);
 }

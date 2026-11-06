@@ -2,11 +2,39 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 
 /**
- * Arquivos de imagem do site.
- * - Produção (Vercel): Vercel Blob (BLOB_READ_WRITE_TOKEN, criado ao conectar o Blob ao projeto).
- * - Desenvolvimento: sem token, grava em public/uploads (servido pelo próprio Next).
- * As imagens chegam já redimensionadas pelo navegador (limite de 4,5 MB por requisição no Vercel).
+ * Arquivos de imagem enviados pelo painel.
+ * - Produção (Netlify): Netlify Blobs, store "imagens" (sem configuração: o Netlify injeta o acesso).
+ * - Desenvolvimento/CI: disco local em .dados/imagens (ou ARMAZENAMENTO_DIR).
+ * Nos dois casos a URL pública é /imagens/<pasta>/<uuid>.<ext>, servida por src/app/imagens/[...chave].
+ * As imagens chegam já redimensionadas pelo navegador (limite de ~6 MB por requisição nas funções do Netlify).
  */
+
+const STORE = "imagens";
+const PREFIXO_URL = "/imagens/";
+const CHAVE_VALIDA = /^(site|portfolio)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|png|webp)$/;
+const TIPO_POR_EXTENSAO: Record<string, string> = { jpg: "image/jpeg", png: "image/png", webp: "image/webp" };
+
+/** Netlify Blobs disponível (função rodando no Netlify ou `netlify dev`). */
+function usaNetlifyBlobs(): boolean {
+  return Boolean((globalThis as { netlifyBlobsContext?: string }).netlifyBlobsContext || process.env.NETLIFY_BLOBS_CONTEXT);
+}
+
+async function store() {
+  const { getStore } = await import("@netlify/blobs");
+  // "strong": a foto aparece logo após o envio, sem esperar a propagação na CDN
+  return getStore({ name: STORE, consistency: "strong" });
+}
+
+function pastaLocal() {
+  return path.resolve(process.env.ARMAZENAMENTO_DIR || ".dados/imagens");
+}
+
+/** Chave interna a partir da URL pública (null se não for uma imagem nossa). */
+export function chaveDaUrl(url: string): string | null {
+  if (!url.startsWith(PREFIXO_URL)) return null;
+  const chave = url.slice(PREFIXO_URL.length);
+  return CHAVE_VALIDA.test(chave) ? chave : null;
+}
 
 export const TAMANHO_MAXIMO = 4 * 1024 * 1024;
 const TIPOS: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
@@ -73,34 +101,41 @@ export async function receberImagem(pasta: "site" | "portfolio", arquivo: unknow
 
 /** Salva e devolve a URL pública. `nome` deve ser único (ex.: UUID). */
 export async function salvarImagem(pasta: "site" | "portfolio", nome: string, bytes: Buffer, tipo: string): Promise<string> {
-  const caminho = `${pasta}/${nome}`;
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const { put } = await import("@vercel/blob");
-    const r = await put(caminho, bytes, {
-      access: "public",
-      contentType: tipo,
-      addRandomSuffix: false,
-      cacheControlMaxAge: 31536000, // nomes únicos: o arquivo nunca muda
-    });
-    return r.url;
+  const chave = `${pasta}/${nome}`;
+  if (!CHAVE_VALIDA.test(chave)) throw new ArquivoInvalido("Nome de arquivo inválido.");
+  if (usaNetlifyBlobs()) {
+    const dados = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+    await (await store()).set(chave, dados, { metadata: { tipo } });
+  } else {
+    const destino = path.join(pastaLocal(), chave);
+    await fs.mkdir(path.dirname(destino), { recursive: true });
+    await fs.writeFile(destino, bytes);
   }
-  const destino = path.join(process.cwd(), "public", "uploads", pasta, nome);
-  await fs.mkdir(path.dirname(destino), { recursive: true });
-  await fs.writeFile(destino, bytes);
-  return `/uploads/${caminho}`;
+  return PREFIXO_URL + chave;
+}
+
+/** Lê uma imagem pela chave (para a rota /imagens). null se não existir. */
+export async function lerImagem(chave: string): Promise<{ bytes: ArrayBuffer | Buffer; tipo: string } | null> {
+  if (!CHAVE_VALIDA.test(chave)) return null;
+  const tipoPadrao = TIPO_POR_EXTENSAO[chave.split(".").pop()!];
+  if (usaNetlifyBlobs()) {
+    const r = await (await store()).getWithMetadata(chave, { type: "arrayBuffer" });
+    if (!r) return null;
+    return { bytes: r.data, tipo: typeof r.metadata?.tipo === "string" ? r.metadata.tipo : tipoPadrao };
+  }
+  try {
+    return { bytes: await fs.readFile(path.join(pastaLocal(), chave)), tipo: tipoPadrao };
+  } catch {
+    return null;
+  }
 }
 
 export async function excluirImagem(url: string | null | undefined): Promise<void> {
-  if (!url) return;
+  const chave = url ? chaveDaUrl(url) : null;
+  if (!chave) return; // imagens de exemplo (public/) não são apagadas
   try {
-    if (url.startsWith("https://") && process.env.BLOB_READ_WRITE_TOKEN) {
-      const { del } = await import("@vercel/blob");
-      await del(url);
-    } else if (url.startsWith("/uploads/")) {
-      const alvo = path.normalize(path.join(process.cwd(), "public", url));
-      // só apaga dentro de public/uploads (proteção contra path traversal)
-      if (alvo.startsWith(path.join(process.cwd(), "public", "uploads"))) await fs.unlink(alvo);
-    }
+    if (usaNetlifyBlobs()) await (await store()).delete(chave);
+    else await fs.unlink(path.join(pastaLocal(), chave));
   } catch {
     // arquivo já removido: nada a fazer
   }

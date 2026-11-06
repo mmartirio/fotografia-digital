@@ -81,6 +81,10 @@ if [ -n "${ADMIN_EMAIL:-}" ] && [ -n "${ADMIN_SENHA:-}" ]; then
   RESP=$(curl -s -m 60 -b "$JAR" -H "Origin: $ORIGEM" -F "arquivo=@-;filename=foto.png;type=image/png" -F categoria=ensaio -F alt=teste "$URL/api/painel/portfolio" < "$PNG")
   ID=$(printf '%s' "$RESP" | sed -n 's/.*"id":"\([0-9a-f-]*\)".*/\1/p')
   if [ -n "$ID" ]; then ok "envio de foto ao portfólio"; else falha "envio de foto ao portfólio: $RESP"; fi
+  SRC=$(printf '%s' "$RESP" | sed -n 's/.*"src":"\([^"]*\)".*/\1/p')
+  [ -n "$SRC" ] && esperado "foto enviada é servida" 200 "$URL$SRC"
+  contem "foto aparece no portfólio do site" "$(basename "${SRC:-nada}")" "$URL/"
+  esperado "imagem inexistente dá 404" 404 "$URL/imagens/portfolio/00000000-0000-0000-0000-000000000000.png"
   printf 'nao sou imagem' > "$PNG"
   esperado "arquivo que não é imagem é recusado" 422 -b "$JAR" -H "Origin: $ORIGEM" -F "arquivo=@-;filename=falso.png;type=image/png" "$URL/api/painel/imagens" < "$PNG"
   [ -n "$ID" ] && esperado "excluir foto do portfólio" 204 -b "$JAR" -X DELETE -H "Origin: $ORIGEM" "$URL/api/painel/portfolio/$ID"

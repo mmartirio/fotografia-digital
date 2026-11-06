@@ -1,6 +1,6 @@
 /**
  * Redimensiona a imagem no navegador antes do envio.
- * - O Vercel aceita no máximo 4,5 MB por requisição; fotos de câmera passam disso.
+ * - As funções do Netlify aceitam cerca de 6 MB por requisição; fotos de câmera passam disso.
  * - Fotos menores carregam mais rápido no site (PageSpeed).
  * PNG continua PNG (preserva transparência, ex.: logo); o resto vira JPEG.
  */

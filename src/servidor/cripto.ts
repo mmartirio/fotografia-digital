@@ -21,8 +21,9 @@ function chave(): Buffer {
     if (k.length !== 32) throw new Error("APP_CHAVE_CRIPTO deve ter 32 bytes em Base64 (openssl rand -base64 32)");
     return k;
   }
-  if (process.env.NODE_ENV === "production" && process.env.VERCEL) {
-    throw new Error("Defina APP_CHAVE_CRIPTO nas variáveis de ambiente do Vercel (openssl rand -base64 32).");
+  // em produção a chave é obrigatória (o CI roda "next start" sem ela, por isso a exceção)
+  if (process.env.NODE_ENV === "production" && !process.env.CI) {
+    throw new Error("Defina APP_CHAVE_CRIPTO nas variáveis de ambiente do Netlify (openssl rand -base64 32).");
   }
   if (!avisouChaveDev) {
     console.warn("[cripto] APP_CHAVE_CRIPTO não definida: usando chave de DESENVOLVIMENTO. Nunca use assim em produção.");

@@ -1,6 +1,6 @@
 /**
  * Acesso ao banco Postgres.
- * - Produção (Vercel): DATABASE_URL → Postgres gerenciado (Neon), driver "postgres".
+ * - Produção (Netlify): DATABASE_URL (Neon) ou NETLIFY_DATABASE_URL (Netlify DB) → driver "postgres".
  * - Desenvolvimento e testes: sem DATABASE_URL → PGlite (Postgres em WebAssembly, dentro do Node),
  *   gravado em .dados/pglite (ou em memória com PGLITE_DIR=memory://). Não precisa de Docker.
  * O esquema é criado/atualizado automaticamente no primeiro acesso (idempotente).
@@ -17,7 +17,7 @@ declare global {
 }
 
 async function conectar(): Promise<Banco> {
-  const url = process.env.DATABASE_URL;
+  const url = process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
   let banco: Banco;
 
   if (url) {
