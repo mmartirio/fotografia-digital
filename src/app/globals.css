@@ -99,6 +99,13 @@
   }
 }
 
+/* Painel gestor: sempre sem serifa (Roboto), independente das fontes escolhidas para o site */
+@utility fonte-painel {
+  --font-titulo: var(--f-roboto);
+  --font-corpo: var(--f-roboto);
+  font-family: var(--f-roboto);
+}
+
 /* Alvo de toque mínimo de 44px (mobile first) */
 @utility botao {
   @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-7 text-sm font-medium transition-all duration-200 active:scale-[0.96];

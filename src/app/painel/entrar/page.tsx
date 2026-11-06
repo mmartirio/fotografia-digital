@@ -11,7 +11,7 @@ export default async function EntrarPainel() {
   if (await usuarioAtual()) redirect("/painel");
   const { aparencia } = await obterConteudo();
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-superficie px-5 py-12">
+    <main className="fonte-painel flex min-h-dvh items-center justify-center bg-superficie px-5 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element -- logo do painel */}

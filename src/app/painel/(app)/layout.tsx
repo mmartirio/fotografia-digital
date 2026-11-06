@@ -16,7 +16,7 @@ export default async function LayoutPainel({ children }: { children: React.React
   const { aparencia } = await obterConteudo();
 
   return (
-    <div className="min-h-dvh bg-superficie lg:flex">
+    <div className="fonte-painel min-h-dvh bg-superficie lg:flex">
       <MenuPainel nome={u.nome} aparencia={aparencia} />
       <main className="min-w-0 flex-1 px-4 pb-24 pt-20 sm:px-6 lg:px-10 lg:pb-12 lg:pt-10">
         {/* Lembrete até a verificação em duas etapas ser ativada */}
