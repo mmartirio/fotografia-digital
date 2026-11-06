@@ -1,0 +1,76 @@
+spring:
+  application:
+    name: fotografia-digital
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/fotografia}
+    username: ${DB_USER:fotografia}
+    password: ${DB_PASSWORD:fotografia}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: ${UPLOAD_MAX_ARQUIVO:30MB}
+      max-request-size: ${UPLOAD_MAX_REQUISICAO:300MB}
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USER:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${SMTP_STARTTLS:true}
+
+server:
+  port: 8080
+  forward-headers-strategy: framework
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    mail:
+      enabled: false
+
+app:
+  armazenamento:
+    diretorio: ${ARMAZENAMENTO_DIR:./data/fotos}
+  galeria:
+    dias-retencao: ${GALERIA_DIAS_RETENCAO:60}
+    marca-dagua: ${MARCA_DAGUA:DAVIFOTOVIDEO}
+  site:
+    url-publica: ${SITE_URL:http://localhost:3000}
+    marca: ${SITE_MARCA:Davi Foto Vídeo}
+  email:
+    remetente: ${EMAIL_REMETENTE:contato@localhost}
+  admin:
+    # Usuário do painel criado na primeira subida. Senha vazia = gerada e exibida no log.
+    email: ${ADMIN_EMAIL:admin@localhost}
+    senha: ${ADMIN_SENHA:}
+    nome: ${ADMIN_NOME:Davi}
+  acesso:
+    # Só no perfil demo: devolve o link mágico na resposta (sem precisar de e-mail)
+    expor-link-dev: false
+
+---
+spring:
+  config:
+    activate:
+      on-profile: demo
+app:
+  acesso:
+    expor-link-dev: true
+  demo:
+    fotos-dir: ${DEMO_FOTOS_DIR:/demo}
